@@ -66,29 +66,54 @@ const verifyCaptcha = async () => {
         isSuccess.value = true;
         message.value = ""; 
         
-        // --- 核心逻辑：通知父窗口 ---
-        console.log("验证通过，1秒后发送 postMessage...");
+        // 🔧 核心逻辑：通知父窗口
+        console.log("✅ 验证通过，准备发送 postMessage...");
         
-        setTimeout(() => {
-            // 构造消息对象
-            const msg = {
-                type: 'CAPTCHA_RESULT',
-                payload: {
-                    captchaId: challenge.value.id,
-                    selectedIndexes: selectedIndexes.value
-                }
-            };
-
-            // 发送给父窗口
-            // 第二个参数 '*' 表示允许发送给任何域名（方便调试）
-            // 如果要更安全，可以填父窗口域名： 'https://band.kessoku.us.kg'
-            window.parent.postMessage(msg, '*');
-
-            // 调试用：如果是独立窗口打开，提示一下
-            if (window.self === window.top) {
-                alert('验证通过！(独立窗口模式)');
+        // 构造消息对象
+        const msg = {
+            type: 'CAPTCHA_RESULT',
+            payload: {
+                captchaId: challenge.value.id,
+                selectedIndexes: selectedIndexes.value
             }
-        }, 1000);
+        };
+
+        console.log("📤 发送消息:", msg);
+
+        // 🔧 立即发送，不延迟
+        try {
+            // 尝试多种方式发送消息
+            if (window.parent && window.parent !== window) {
+                // 方式1：发送给直接父窗口（推荐）
+                window.parent.postMessage(msg, '*');
+                console.log("✅ 已向 parent 发送消息");
+            }
+            
+            if (window.top && window.top !== window) {
+                // 方式2：发送给顶层窗口
+                window.top.postMessage(msg, '*');
+                console.log("✅ 已向 top 发送消息");
+            }
+            
+            // 🔧 再延迟发送一次，确保消息被接收
+            setTimeout(() => {
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage(msg, '*');
+                    console.log("✅ 再次向 parent 发送消息");
+                }
+            }, 100);
+            
+        } catch (e) {
+            console.error("❌ postMessage 发送失败:", e);
+        }
+
+        // 🔧 如果是独立窗口打开（调试用）
+        if (window.self === window.top) {
+            console.warn("⚠️ 独立窗口模式，无法发送消息");
+            setTimeout(() => {
+                alert('验证通过！\n(独立窗口模式，请在 iframe 中使用)');
+            }, 1000);
+        }
 
     } else {
         message.value = "选错啦，再仔细看看~";
@@ -101,6 +126,7 @@ const verifyCaptcha = async () => {
         }, 1500);
     }
   } catch (e) {
+      console.error("❌ 验证请求失败:", e);
       message.value = "请求出错，请重试";
   } finally {
       loading.value = false;
@@ -109,6 +135,11 @@ const verifyCaptcha = async () => {
 
 onMounted(() => {
   fetchCaptcha();
+  
+  // 🔧 调试：监听父窗口消息（双向通信检测）
+  window.addEventListener('message', (event) => {
+    console.log("🔔 iframe 收到消息:", event.data);
+  });
 });
 </script>
 
@@ -164,6 +195,7 @@ onMounted(() => {
                 <div class="success-content">
                     <div class="big-checkmark">✓</div>
                     <p>验证通过</p>
+                    <p class="success-hint">正在处理...</p>
                 </div>
             </div>
         </transition>
@@ -179,7 +211,6 @@ onMounted(() => {
 </template>
 
 <style>
-/* 样式保持不变，沿用之前的 */
 html, body, #app { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
 .app-wrapper { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.0); }
 .captcha-card { width: 340px; max-width: 90vw; background: #fff; padding: 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; box-sizing: border-box; margin: auto; }
@@ -202,6 +233,7 @@ html, body, #app { margin: 0; padding: 0; width: 100%; height: 100%; overflow: h
 .success-mask { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); border-radius: 16px; display: flex; align-items: center; justify-content: center; z-index: 10; flex-direction: column; }
 .big-checkmark { font-size: 60px; color: #52c41a; animation: popIn 0.5s; }
 .success-content p { color: #52c41a; font-weight: bold; margin-top: 10px; text-align: center; }
+.success-hint { font-size: 12px; color: #999 !important; margin-top: 5px !important; }
 .loading-state { text-align: center; padding: 40px 0; color: #888; }
 .spinner { width: 30px; height: 30px; border: 3px solid #f0f0f0; border-top: 3px solid #e91e63; border-radius: 50%; margin: 0 auto 15px; animation: spin 0.8s linear infinite; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
