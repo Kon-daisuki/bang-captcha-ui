@@ -186,39 +186,48 @@ onMounted(() => {
 </template>
 
 <style>
-/* 全局重置与居中布局 */
-body, html {
-    margin: 0; padding: 0; width: 100%; height: 100%;
-    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    overflow: hidden; /* 防止出现滚动条 */
+/* 1. 全局重置：确保根元素占满屏幕且无默认边距 */
+html, body, #app {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* 禁止滚动条，防止抖动 */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* 这里的背景色可以根据你的喜好调整，这里用了淡粉色渐变 */
+/* 2. 容器设置：使用 Flexbox 实现绝对居中 */
 .app-wrapper {
     display: flex;
-    justify-content: center;
-    align-items: center;
+    justify-content: center; /* 水平居中 */
+    align-items: center;     /* 垂直居中 */
     width: 100%;
-    height: 100vh;
-    background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+    height: 100%; /* 占满父容器 */
+    
+    /* 背景色：建议使用轻微的遮罩色，这样嵌入 Iframe 时更自然 */
+    background: rgba(255, 255, 255, 0.0); /* 透明背景，让父级背景透出来，或者保留你喜欢的渐变 */
+    /* 如果你希望验证码页面有独立背景，可以用下面的代码： */
+    /* background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); */
 }
 
-/* 卡片主体 */
+/* 3. 卡片样式优化 */
 .captcha-card {
     width: 340px;
+    max-width: 90vw; /* 移动端适配：最大宽度不超过屏幕90% */
     background: #fff;
     padding: 20px;
     border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
     position: relative;
     box-sizing: border-box;
-    transition: all 0.3s ease;
+    /* 增加 margin auto 确保在某些 flex 失效场景下也能居中 */
+    margin: auto; 
 }
 
+/* --- 以下保持原有样式 --- */
 .header { font-size: 16px; margin-bottom: 15px; color: #444; text-align: center; }
-.target-name { color: #e91e63; font-weight: bold; font-size: 18px; border-bottom: 2px dashed #e91e63; padding-bottom: 2px; }
+.target-name { color: #e91e63; font-weight: bold; border-bottom: 2px dashed #e91e63; padding-bottom: 2px; }
 
-/* 九宫格布局 */
 .grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -232,83 +241,47 @@ body, html {
     cursor: pointer;
     border-radius: 8px;
     overflow: hidden;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    background: #f0f0f0; /* 图片未加载时的底色 */
+    transition: transform 0.2s;
+    background: #f0f0f0;
 }
-.img-wrapper:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 .img-wrapper:active { transform: scale(0.95); }
-
-/* 选中状态 */
-.img-wrapper.active {
-    box-shadow: 0 0 0 3px #e91e63; /* 外发光边框 */
-    transform: scale(0.96);
-}
-
+.img-wrapper.active { box-shadow: 0 0 0 3px #e91e63; transform: scale(0.96); }
 .img-wrapper img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* 选中遮罩 */
 .selection-overlay {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(233, 30, 99, 0.2);
-    display: flex; align-items: center; justify-content: center;
+    background: rgba(233, 30, 99, 0.2); display: flex; align-items: center; justify-content: center;
 }
 .checkmark-icon {
-    background: #e91e63; color: white;
-    width: 24px; height: 24px; border-radius: 50%;
+    background: #e91e63; color: white; width: 24px; height: 24px; border-radius: 50%;
     font-size: 14px; display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-/* 按钮区域 */
 .footer { display: flex; gap: 12px; height: 44px; }
-.btn {
-    border: none; border-radius: 8px; cursor: pointer;
-    font-size: 15px; font-weight: 600; transition: all 0.2s;
-    display: flex; align-items: center; justify-content: center;
-}
+.btn { border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
 .btn.refresh { width: 44px; background: #f5f7fa; color: #666; font-size: 20px; }
-.btn.refresh:hover { background: #e6e8eb; transform: rotate(180deg); }
+.btn.verify { flex: 1; background: #e91e63; color: white; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.btn.verify { flex: 1; background: #e91e63; color: white; box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3); }
-.btn.verify:hover { background: #d81b60; box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4); }
-.btn.verify:disabled { background: #ffb2c1; cursor: not-allowed; box-shadow: none; }
-
-/* 消息提示 */
-.message {
-    margin-top: 15px; text-align: center; font-size: 14px;
-    padding: 8px; border-radius: 6px;
-    animation: shake 0.5s ease-in-out;
-}
+.message { margin-top: 15px; text-align: center; font-size: 14px; padding: 8px; border-radius: 6px; }
 .message.error { color: #ff4d4f; background: #fff2f0; }
 
-/* 成功遮罩动画 */
 .success-mask {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 16px;
-    display: flex; align-items: center; justify-content: center;
-    z-index: 10;
-    flex-direction: column;
+    background: rgba(255, 255, 255, 0.95); border-radius: 16px;
+    display: flex; align-items: center; justify-content: center; z-index: 10; flex-direction: column;
 }
-.big-checkmark {
-    font-size: 60px; color: #52c41a;
-    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.success-content p { color: #52c41a; font-weight: bold; margin-top: 10px; font-size: 18px; }
+.big-checkmark { font-size: 60px; color: #52c41a; animation: popIn 0.5s; }
+.success-content p { color: #52c41a; font-weight: bold; margin-top: 10px; text-align: center; }
 
-/* Loading 动画 */
 .loading-state { text-align: center; padding: 40px 0; color: #888; }
 .spinner {
-    width: 30px; height: 30px; border: 3px solid #f0f0f0;
-    border-top: 3px solid #e91e63; border-radius: 50%;
-    margin: 0 auto 15px; animation: spin 0.8s linear infinite;
+    width: 30px; height: 30px; border: 3px solid #f0f0f0; border-top: 3px solid #e91e63;
+    border-radius: 50%; margin: 0 auto 15px; animation: spin 0.8s linear infinite;
 }
 
-/* 动画定义 */
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
-@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-
 .scale-enter-active, .scale-leave-active { transition: all 0.2s; }
 .scale-enter-from, .scale-leave-to { opacity: 0; transform: scale(0.5); }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
