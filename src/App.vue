@@ -69,8 +69,8 @@ const verifyCaptcha = async () => {
         // 🔧 核心逻辑：通知父窗口
         console.log("✅ 验证通过，准备发送 postMessage...");
         
-        // 构造消息对象
-        const msg = {
+        // 构造原始消息对象
+        const rawMsg = {
             type: 'CAPTCHA_RESULT',
             payload: {
                 captchaId: challenge.value.id,
@@ -78,13 +78,19 @@ const verifyCaptcha = async () => {
             }
         };
 
+        // ⭐⭐⭐ 关键修改开始 ⭐⭐⭐
+        // 使用 JSON 序列化再反序列化，彻底剥离 Vue 的 Proxy 响应式外壳
+        // 解决 "Uncaught DOMException: #<Object> could not be cloned" 报错
+        const msg = JSON.parse(JSON.stringify(rawMsg));
+        // ⭐⭐⭐ 关键修改结束 ⭐⭐⭐
+
         console.log("📤 发送消息:", msg);
 
-        // 🔧 立即发送，不延迟
+        // 🔧 立即发送
         try {
             // 尝试多种方式发送消息
             if (window.parent && window.parent !== window) {
-                // 方式1：发送给直接父窗口（推荐）
+                // 方式1：发送给直接父窗口
                 window.parent.postMessage(msg, '*');
                 console.log("✅ 已向 parent 发送消息");
             }
@@ -95,10 +101,10 @@ const verifyCaptcha = async () => {
                 console.log("✅ 已向 top 发送消息");
             }
             
-            // 🔧 再延迟发送一次，确保消息被接收
+            // 🔧 延迟发送一次，确保消息被接收
             setTimeout(() => {
                 if (window.parent && window.parent !== window) {
-                    window.parent.postMessage(msg, '*');
+                    window.parent.postMessage(msg, '*'); // 这里也使用处理过的 msg
                     console.log("✅ 再次向 parent 发送消息");
                 }
             }, 100);
