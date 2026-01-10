@@ -1,5 +1,11 @@
-# Vue 3 + Vite
+# 🎸 BandCaptcha
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+![BandCaptcha Banner](https://img.shields.io/badge/Focus-Anime_Band-ff69b4?style=for-the-badge&logo=github)
+[![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
+[![Base Project](https://img.shields.io/badge/Based%20on-BangCaptcha-orange?style=flat-square)](https://github.com/YuiNijika/BangCaptcha)
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+**BandCaptcha** 是一个专为“乐队番”爱好者设计的趣味人机验证项目。
+它将传统的验证码校验逻辑与二次元乐队成员识别结合，让验证过程不再枯燥。
+
+> **本项目基于 [YuiNijika/BangCaptcha](https://github.com/YuiNijika/BangCaptcha) 进行二次开发。**
+> 旨在通过识别《孤独摇滚！》、《轻音少女》、《MyGO!!!!!》等作品中的角色来完成校验。
