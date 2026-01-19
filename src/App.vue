@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 
-const API_BASE = 'https://band.kessoku.us.kg';
+const API_BASE = 'https://band.19216891.xyz';
 
 const challenge = ref(null);
 const selectedIndexes = ref([]);
